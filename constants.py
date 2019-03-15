@@ -1,13 +1,19 @@
 # game window constants
 DISPLAY_TITLE = "Snake"
-DISPLAY_WIDTH = 1000
+DISPLAY_WIDTH = 1024
 DISPLAY_HEIGHT = 800
 FPS = 60
 
 # game settings
 TILE_SIZE = 32
+PLAYER_SPEED = 150
+PLAYER_SPEED_INCREASE_RATE = -10
+PLAYER_SPEED_CAP = 50
 
 # colour constants
 BLACK = (0, 0, 0)
 LIGHTGREY = (220, 220, 220)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
 WHITE = (255, 255, 255)
+

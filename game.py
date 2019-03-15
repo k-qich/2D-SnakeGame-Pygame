@@ -1,5 +1,7 @@
 from constants import *
+import entity
 import pygame as pg
+import random
 import sys
 
 
@@ -16,15 +18,33 @@ class Game:
         self.gameDisplay = pg.display.set_mode((self.display_width, self.display_height))
         pg.display.set_caption(self.display_name)
 
+        # game objects
+        self.snake_head = None
+
+        # sprite groups
+        self.snake_sprites = pg.sprite.Group()
+        self.apple_sprite = pg.sprite.Group()
+
         self.clock = pg.time.Clock()
         self.running = False
 
+    def init_game_vars(self):
+        self.snake_head = entity.SnakeHead(int(self.display_width/TILE_SIZE/2), int(self.display_height/TILE_SIZE/2), GREEN)
+        self.snake_sprites.add(self.snake_head)
+        self.generate_new_apple()
+
     def update(self):
-        pass
+        self.snake_sprites.update()
 
     def render(self):
         # rendering the game background
         self.gameDisplay.fill(WHITE)
+
+        # render apple
+        self.apple_sprite.draw(self.gameDisplay)
+
+        # render player
+        self.snake_sprites.draw(self.gameDisplay)
 
         # draw game grid
         for x in range(0, DISPLAY_WIDTH, TILE_SIZE):
@@ -33,15 +53,35 @@ class Game:
             pg.draw.line(self.gameDisplay, BLACK, (0, y), (DISPLAY_WIDTH, y))
 
     def game_event_handler(self):
+        keys = pg.key.get_pressed()
+
         # processing player inputs
         for event in pg.event.get():
             # game window closed
             if event.type == pg.QUIT:
                 self.exit()
 
+        # player movement
+        if keys[pg.K_LEFT]:
+            self.snake_head.dy = 0
+            self.snake_head.dx = -TILE_SIZE
+        if keys[pg.K_RIGHT]:
+            self.snake_head.dy = 0
+            self.snake_head.dx = TILE_SIZE
+        if keys[pg.K_UP]:
+            self.snake_head.dx = 0
+            self.snake_head.dy = -TILE_SIZE
+        if keys[pg.K_DOWN]:
+            self.snake_head.dx = 0
+            self.snake_head.dy = TILE_SIZE
+
     # GAME LOOP
     def game_loop(self):
         print("Game Running!")
+
+        # init game objects
+        self.init_game_vars()
+
         # game loop
         self.running = True
         while self.running:
@@ -59,6 +99,17 @@ class Game:
 
             # defining the fps of game
             self.clock.tick(FPS)
+
+    # creates a new random position for an apple
+    def generate_new_apple(self):
+        posy = random.randint(0, DISPLAY_HEIGHT/TILE_SIZE)
+        posx = random.randint(0, DISPLAY_WIDTH/TILE_SIZE)
+        apple = entity.Apple(posx, posy, RED)
+        self.apple_sprite.add(apple)
+
+    # increases the length of the snake upon consuming an apple
+    def grow_snake(self):
+        pass
 
     def run(self):
         self.game_loop()
