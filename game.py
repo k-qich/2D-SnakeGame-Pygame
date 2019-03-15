@@ -36,6 +36,16 @@ class Game:
     def update(self):
         self.snake_sprites.update()
 
+        # check if player is going out of bounds
+        if self.boundary_check():
+            self.running = False
+
+        # check if snake has collided with an apple
+        apple_collision = pg.sprite.spritecollide(self.snake_head, self.apple_sprite, False)
+        for apple in apple_collision:
+            apple.kill()
+            self.generate_new_apple()
+
     def render(self):
         # rendering the game background
         self.gameDisplay.fill(WHITE)
@@ -99,6 +109,11 @@ class Game:
 
             # defining the fps of game
             self.clock.tick(FPS)
+
+    # returns true/false depending on whether the player has exceeded the game window
+    def boundary_check(self):
+        return self.snake_head.rect.top < 0 or self.snake_head.rect.bottom > DISPLAY_HEIGHT \
+               or self.snake_head.rect.left < 0 or self.snake_head.rect.right > DISPLAY_WIDTH
 
     # creates a new random position for an apple
     def generate_new_apple(self):
