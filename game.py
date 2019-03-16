@@ -19,6 +19,8 @@ class Game:
         pg.display.set_caption(self.display_name)
 
         # game vars
+        self.apples_eaten = 0
+        self.max_length = 0
         self.last_movement_time = 0
         self.movement_interval = PLAYER_SPEED       # how fast the snake will be moving
 
@@ -28,6 +30,7 @@ class Game:
 
         # sprite groups
         self.snake_sprites = pg.sprite.Group()
+        self.snake_body_sprites = pg.sprite.Group()
         self.apple_sprite = pg.sprite.Group()
 
         self.clock = pg.time.Clock()
@@ -37,6 +40,8 @@ class Game:
         self.snake_head = entity.SnakeHead(int(self.display_width/TILE_SIZE/2) * TILE_SIZE, int(self.display_height/TILE_SIZE/2) * TILE_SIZE, GREEN)
         self.snake_sprites.add(self.snake_head)
         self.snake.append(self.snake_head)
+
+        self.max_length += 1
 
     def update(self):
         if not self.apple_sprite:
@@ -48,12 +53,21 @@ class Game:
         if t_now - self.last_movement_time > self.movement_interval:
             self.last_movement_time = t_now
             self.snake_sprites.update()
+            self.snake_body_sprites.update()
+
+            # check if snake has collided with itself
+            if pg.sprite.spritecollide(self.snake_head, self.snake_body_sprites, False):
+                self.running = False
 
             # check if snake has collided with an apple
             apple_collision = pg.sprite.spritecollide(self.snake_head, self.apple_sprite, False)
             for apple in apple_collision:
                 apple.kill()
                 self.grow_snake()
+
+                # increment stat tracker
+                self.apples_eaten += 1
+                self.max_length += 1
 
             # update the snake's body
             if len(self.snake) > 1:
@@ -75,6 +89,7 @@ class Game:
 
         # render player
         self.snake_sprites.draw(self.gameDisplay)
+        self.snake_body_sprites.draw(self.gameDisplay)
 
         # draw game grid
         for x in range(0, DISPLAY_WIDTH, TILE_SIZE):
@@ -92,16 +107,16 @@ class Game:
                 self.exit()
 
         # player movement
-        if keys[pg.K_LEFT]:
+        if keys[pg.K_LEFT] and self.snake_head.dx == 0:
             self.snake_head.dy = 0
             self.snake_head.dx = -TILE_SIZE
-        if keys[pg.K_RIGHT]:
+        if keys[pg.K_RIGHT] and self.snake_head.dx == 0:
             self.snake_head.dy = 0
             self.snake_head.dx = TILE_SIZE
-        if keys[pg.K_UP]:
+        if keys[pg.K_UP] and self.snake_head.dy == 0:
             self.snake_head.dx = 0
             self.snake_head.dy = -TILE_SIZE
-        if keys[pg.K_DOWN]:
+        if keys[pg.K_DOWN] and self.snake_head.dy == 0:
             self.snake_head.dx = 0
             self.snake_head.dy = TILE_SIZE
 
@@ -130,6 +145,8 @@ class Game:
             # defining the fps of game
             self.clock.tick(FPS)
 
+        self.game_over()
+
     # returns true/false depending on whether the player has exceeded the game window
     def boundary_check(self):
         return self.snake_head.rect.top < 0 or self.snake_head.rect.bottom > DISPLAY_HEIGHT \
@@ -146,12 +163,15 @@ class Game:
     def grow_snake(self):
         # add new snake body to the end of the snake
         snake_body = entity.SnakeBody(self.snake[-1].last_posx, self.snake[-1].last_posy, GREEN)
-        self.snake_sprites.add(snake_body)
+        self.snake_body_sprites.add(snake_body)
         self.snake.append(snake_body)
+
+    def game_over(self):
+        self.exit()
 
     def run(self):
         self.game_loop()
-        self.exit()
+        self.game_over()
 
     def exit(self):
         print("Quitting")
