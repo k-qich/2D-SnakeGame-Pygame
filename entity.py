@@ -13,7 +13,7 @@ class Entity(pg.sprite.Sprite):
 
         # defines boundaries of sprite
         self.rect = self.image.get_rect()
-        self.rect.topleft = (x * TILE_SIZE, y * TILE_SIZE)
+        self.rect.topleft = (x, y)
 
 
 class SnakeHead(Entity):
@@ -23,21 +23,27 @@ class SnakeHead(Entity):
         self.dx = TILE_SIZE
         self.dy = 0
 
-        self.last_movement_time = 0
-        self.movement_interval = PLAYER_SPEED       # how fast the snake will be moving
+        # keeps track of players last position
+        self.last_posx = x
+        self.last_posy = y
 
     def update(self):
-        t_now = pg.time.get_ticks()
+        # save snake's last position
+        self.last_posx = self.rect.x
+        self.last_posy = self.rect.y
 
-        # regulate snake's movement speed
-        if t_now - self.last_movement_time > self.movement_interval:
-            self.rect.x += self.dx
-            self.rect.y += self.dy
-            self.last_movement_time = t_now
+        # update snake's position
+        self.rect.x += self.dx
+        self.rect.y += self.dy
 
 
-class SnakeBody:
-    pass
+class SnakeBody(Entity):
+    def __init__(self, x, y, colour):
+        super().__init__(x, y, colour)
+
+        # keeps track of the body's last position
+        self.last_posx = x
+        self.last_posy = y
 
 
 class Apple(Entity):

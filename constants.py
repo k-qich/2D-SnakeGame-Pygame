@@ -1,6 +1,6 @@
 # game window constants
 DISPLAY_TITLE = "Snake"
-DISPLAY_WIDTH = 1024
+DISPLAY_WIDTH = 800
 DISPLAY_HEIGHT = 800
 FPS = 60
 
