@@ -1,5 +1,6 @@
 from constants import *
 import entity
+import os
 import pygame as pg
 import random
 import sys
@@ -17,6 +18,13 @@ class Game:
         pg.mixer.init()
         self.gameDisplay = pg.display.set_mode((self.display_width, self.display_height))
         pg.display.set_caption(self.display_name)
+
+        # game assets
+        self.snake_head_texture = None
+
+        self.pickup_sound = None
+        self.crash_sound = None
+
 
         # game vars
         self.apples_eaten = 0
@@ -38,6 +46,10 @@ class Game:
         self.running = False
 
     def init_game_vars(self):
+        pg.mixer.music.load("sounds/Bonkers-for-Arcades.mp3")
+        self.pickup_sound = pg.mixer.Sound("sounds/Pickup.wav")
+        self.crash_sound = pg.mixer.Sound("sounds/Crash.wav")
+
         self.snake_head = entity.SnakeHead(int(self.display_width/TILE_SIZE/2) * TILE_SIZE, int(self.display_height/TILE_SIZE/2) * TILE_SIZE, GREEN)
         self.snake_sprites.add(self.snake_head)
         self.snake.append(self.snake_head)
@@ -65,6 +77,8 @@ class Game:
             # check if snake has collided with an apple
             apple_collision = pg.sprite.spritecollide(self.snake_head, self.apple_sprite, False)
             for apple in apple_collision:
+                pg.mixer.Sound.play(self.pickup_sound)
+
                 apple.kill()
                 self.grow_snake()
 
@@ -203,6 +217,7 @@ class Game:
     # GAME LOOP
     def game_loop(self):
         print("Game Running!")
+        pg.mixer.music.play(-1)
 
         self.running = True
         while self.running:
@@ -223,6 +238,9 @@ class Game:
 
     def game_over(self):
         print("Game Over")
+        pg.mixer.music.stop()
+        pg.mixer.Sound.play(self.crash_sound)
+
         is_game_over = True
         menu_box = pg.Rect(0, 0, GAME_OVER_MENU_SIZE, GAME_OVER_MENU_SIZE)
         menu_box.center = (DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2)
