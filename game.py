@@ -22,7 +22,7 @@ class Game:
         self.apples_eaten = 0
         self.max_length = 0
         self.last_movement_time = 0
-        self.movement_interval = PLAYER_SPEED       # how fast the snake will be moving
+        self.movement_interval = 0       # how fast the snake will be moving
         self.restart = False
 
         # game objects
@@ -43,6 +43,7 @@ class Game:
         self.snake.append(self.snake_head)
 
         self.max_length += 1
+        self.movement_interval = PLAYER_SPEED
         self.render()
 
     def update(self):
@@ -71,6 +72,10 @@ class Game:
                 self.apples_eaten += 1
                 self.max_length += 1
 
+                # increase game difficulty
+                if self.movement_interval > PLAYER_SPEED_CAP:
+                    self.movement_interval += PLAYER_SPEED_INCREASE_RATE
+
             # update the snake's body
             if len(self.snake) > 1:
                 for i in range(1, len(self.snake), 1):
@@ -86,12 +91,12 @@ class Game:
         # rendering the game background
         self.gameDisplay.fill(WHITE)
 
-        # render apple
-        self.apple_sprite.draw(self.gameDisplay)
-
         # render player
         self.snake_sprites.draw(self.gameDisplay)
         self.snake_body_sprites.draw(self.gameDisplay)
+
+        # render apple
+        self.apple_sprite.draw(self.gameDisplay)
 
         # draw game grid
         for x in range(0, DISPLAY_WIDTH, TILE_SIZE):
@@ -279,6 +284,7 @@ class Game:
         self.apple_sprite = pg.sprite.Group()
 
         self.last_movement_time = 0
+        self.movement_interval = 0
         self.snake = []
 
         self.apples_eaten = 0
