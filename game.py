@@ -43,6 +43,7 @@ class Game:
         self.snake.append(self.snake_head)
 
         self.max_length += 1
+        self.render()
 
     def update(self):
         if not self.apple_sprite:
@@ -99,7 +100,22 @@ class Game:
             pg.draw.line(self.gameDisplay, BLACK, (0, y), (DISPLAY_WIDTH, y))
 
     def game_intro_event_handler(self):
-        pass
+        keys = pg.key.get_pressed()
+        in_menu = True
+        start_btn_col = BLACK
+
+        # processing player inputs
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                self.exit()
+
+        if keys[pg.K_RETURN]:
+            in_menu = False
+
+        self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE/2)), "Use arrow keys to move", BLACK, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2 - 25)
+        self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE/1.4)), "Press [ENTER] to start", start_btn_col, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2 + 25)
+
+        return in_menu
 
     def game_event_handler(self):
         keys = pg.key.get_pressed()
@@ -139,7 +155,7 @@ class Game:
             if event.type == pg.QUIT:
                 self.exit()
 
-        # menu button hover for quit
+        # menu button hover for restart
         if restart_btn.collidepoint(mouse_pos):
             restart_btn_col = LIGHTERBLACK
             if pg.mouse.get_pressed()[0] == 1:
@@ -161,14 +177,28 @@ class Game:
 
         return in_menu
 
+    def game_intro(self):
+        print("Intro")
+        is_game_over = True
+        menu_box = pg.Rect(0, 0, GAME_OVER_MENU_SIZE, GAME_OVER_MENU_SIZE/2)
+        menu_box.center = (DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2)
+        menu_box2 = pg.Rect(0, 0, GAME_OVER_MENU_SIZE - 2, GAME_OVER_MENU_SIZE/2 - 2)
+        menu_box2.center = (DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2)
+
+        pg.display.flip()
+
+        while is_game_over:
+            pg.draw.rect(self.gameDisplay, BLACK, menu_box, 1)
+            pg.draw.rect(self.gameDisplay, WHITE, menu_box2)
+
+            is_game_over = self.game_intro_event_handler()
+
+            pg.display.flip()
+
     # GAME LOOP
     def game_loop(self):
         print("Game Running!")
 
-        # init game objects
-        self.init_game_vars()
-
-        # game loop
         self.running = True
         while self.running:
             # event handling
@@ -231,8 +261,11 @@ class Game:
         self.snake.append(snake_body)
 
     def run(self):
+        self.init_game_vars()
+        self.game_intro()
         self.game_loop()
         self.game_over()
+
         if self.restart:
             self.restart_game()
             self.run()
