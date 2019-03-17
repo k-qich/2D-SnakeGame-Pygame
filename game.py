@@ -23,6 +23,7 @@ class Game:
         self.max_length = 0
         self.last_movement_time = 0
         self.movement_interval = PLAYER_SPEED       # how fast the snake will be moving
+        self.restart = False
 
         # game objects
         self.snake_head = None
@@ -42,6 +43,7 @@ class Game:
         self.snake.append(self.snake_head)
 
         self.max_length += 1
+        self.render()
 
     def update(self):
         if not self.apple_sprite:
@@ -97,6 +99,24 @@ class Game:
         for y in range(0, DISPLAY_HEIGHT, TILE_SIZE):
             pg.draw.line(self.gameDisplay, BLACK, (0, y), (DISPLAY_WIDTH, y))
 
+    def game_intro_event_handler(self):
+        keys = pg.key.get_pressed()
+        in_menu = True
+        start_btn_col = BLACK
+
+        # processing player inputs
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                self.exit()
+
+        if keys[pg.K_RETURN]:
+            in_menu = False
+
+        self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE/2)), "Use arrow keys to move", BLACK, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2 - 25)
+        self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE/1.4)), "Press [ENTER] to start", start_btn_col, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2 + 25)
+
+        return in_menu
+
     def game_event_handler(self):
         keys = pg.key.get_pressed()
 
@@ -120,14 +140,65 @@ class Game:
             self.snake_head.dx = 0
             self.snake_head.dy = TILE_SIZE
 
+    def game_over_event_handler(self):
+        mouse_pos = pg.mouse.get_pos()
+        in_menu = True
+        restart_btn_col = BLACK
+        quit_btn_col = BLACK
+
+        restart_btn = self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.2)), "RESTART", restart_btn_col, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 50)
+        quit_btn = self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.2)), "QUIT", quit_btn_col, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 100)
+
+        # processing player inputs
+        for event in pg.event.get():
+            # game window closed
+            if event.type == pg.QUIT:
+                self.exit()
+
+        # menu button hover for restart
+        if restart_btn.collidepoint(mouse_pos):
+            restart_btn_col = LIGHTERBLACK
+            if pg.mouse.get_pressed()[0] == 1:
+                in_menu = False
+                self.restart = True
+
+        # menu button hover for quit
+        if quit_btn.collidepoint(mouse_pos):
+            quit_btn_col = LIGHTERBLACK
+            if pg.mouse.get_pressed()[0] == 1:
+                in_menu = False
+
+        self.display_text(pg.font.SysFont(TEXT_FONT, TEXT_SIZE), "GAME OVER", BLACK, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 - 100)
+        self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.5)), "APPLES: " + str(self.apples_eaten), RED, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 - 50)
+        self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.5)), "LENGTH: " + str(self.max_length), GREEN, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 - 20)
+
+        restart_btn = self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.2)), "RESTART", restart_btn_col, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 50)
+        quit_btn = self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.2)), "QUIT", quit_btn_col, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 100)
+
+        return in_menu
+
+    def game_intro(self):
+        print("Intro")
+        is_game_over = True
+        menu_box = pg.Rect(0, 0, GAME_OVER_MENU_SIZE, GAME_OVER_MENU_SIZE/2)
+        menu_box.center = (DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2)
+        menu_box2 = pg.Rect(0, 0, GAME_OVER_MENU_SIZE - 2, GAME_OVER_MENU_SIZE/2 - 2)
+        menu_box2.center = (DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2)
+
+        pg.display.flip()
+
+        while is_game_over:
+            pg.draw.rect(self.gameDisplay, BLACK, menu_box, 1)
+            pg.draw.rect(self.gameDisplay, WHITE, menu_box2)
+
+            is_game_over = self.game_intro_event_handler()
+
+            pg.display.flip()
+
     # GAME LOOP
     def game_loop(self):
         print("Game Running!")
 
-        # init game objects
-        self.init_game_vars()
-
-        # game loop
         self.running = True
         while self.running:
             # event handling
@@ -145,7 +216,30 @@ class Game:
             # defining the fps of game
             self.clock.tick(FPS)
 
-        self.game_over()
+    def game_over(self):
+        print("Game Over")
+        is_game_over = True
+        menu_box = pg.Rect(0, 0, GAME_OVER_MENU_SIZE, GAME_OVER_MENU_SIZE)
+        menu_box.center = (DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2)
+        menu_box2 = pg.Rect(0, 0, GAME_OVER_MENU_SIZE - 2, GAME_OVER_MENU_SIZE - 2)
+        menu_box2.center = (DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2)
+
+        pg.display.flip()
+
+        while is_game_over:
+            pg.draw.rect(self.gameDisplay, BLACK, menu_box, 1)
+            pg.draw.rect(self.gameDisplay, WHITE, menu_box2)
+
+            is_game_over = self.game_over_event_handler()
+
+            pg.display.flip()
+
+    def display_text(self, font, text, color, x, y):
+        display_text = font.render(text, True, color)
+        btn = display_text.get_rect()
+        btn.center = (x, y)
+        self.gameDisplay.blit(display_text, btn)
+        return btn
 
     # returns true/false depending on whether the player has exceeded the game window
     def boundary_check(self):
@@ -166,12 +260,30 @@ class Game:
         self.snake_body_sprites.add(snake_body)
         self.snake.append(snake_body)
 
-    def game_over(self):
-        self.exit()
-
     def run(self):
+        self.init_game_vars()
+        self.game_intro()
         self.game_loop()
         self.game_over()
+
+        if self.restart:
+            self.restart_game()
+            self.run()
+        else:
+            self.exit()
+
+    def restart_game(self):
+        # resetting game vars
+        self.snake_sprites = pg.sprite.Group()
+        self.snake_body_sprites = pg.sprite.Group()
+        self.apple_sprite = pg.sprite.Group()
+
+        self.last_movement_time = 0
+        self.snake = []
+
+        self.apples_eaten = 0
+        self.max_length = 0
+        self.restart = False
 
     def exit(self):
         print("Quitting")
