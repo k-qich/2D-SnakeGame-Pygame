@@ -1,5 +1,12 @@
-# 2D-SnakeGame-Pygame
+# Snake Game
 
-Basic Snake game.
+Simple snake game made using Python and Pygame.
 
-Status: In progress
+### Credits
+
+Music by:
+* **Eric Matyas** - www.soundimage.org
+
+Sound effects by:
+* **Little Robot Sound** - www.littlerobotsoundfactory.com - https://opengameart.org/content/8-bit-sound-effects-library
+

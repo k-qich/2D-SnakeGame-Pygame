@@ -1,5 +1,6 @@
 from constants import *
 import entity
+import os
 import pygame as pg
 import random
 import sys
@@ -18,11 +19,18 @@ class Game:
         self.gameDisplay = pg.display.set_mode((self.display_width, self.display_height))
         pg.display.set_caption(self.display_name)
 
+        # game assets
+        self.snake_head_texture = None
+
+        self.pickup_sound = None
+        self.crash_sound = None
+
+
         # game vars
         self.apples_eaten = 0
         self.max_length = 0
         self.last_movement_time = 0
-        self.movement_interval = PLAYER_SPEED       # how fast the snake will be moving
+        self.movement_interval = 0       # how fast the snake will be moving
         self.restart = False
 
         # game objects
@@ -38,11 +46,16 @@ class Game:
         self.running = False
 
     def init_game_vars(self):
+        pg.mixer.music.load("sounds/Bonkers-for-Arcades.mp3")
+        self.pickup_sound = pg.mixer.Sound("sounds/Pickup.wav")
+        self.crash_sound = pg.mixer.Sound("sounds/Crash.wav")
+
         self.snake_head = entity.SnakeHead(int(self.display_width/TILE_SIZE/2) * TILE_SIZE, int(self.display_height/TILE_SIZE/2) * TILE_SIZE, GREEN)
         self.snake_sprites.add(self.snake_head)
         self.snake.append(self.snake_head)
 
         self.max_length += 1
+        self.movement_interval = PLAYER_SPEED
         self.render()
 
     def update(self):
@@ -64,12 +77,18 @@ class Game:
             # check if snake has collided with an apple
             apple_collision = pg.sprite.spritecollide(self.snake_head, self.apple_sprite, False)
             for apple in apple_collision:
+                pg.mixer.Sound.play(self.pickup_sound)
+
                 apple.kill()
                 self.grow_snake()
 
                 # increment stat tracker
                 self.apples_eaten += 1
                 self.max_length += 1
+
+                # increase game difficulty
+                if self.movement_interval > PLAYER_SPEED_CAP:
+                    self.movement_interval += PLAYER_SPEED_INCREASE_RATE
 
             # update the snake's body
             if len(self.snake) > 1:
@@ -86,12 +105,12 @@ class Game:
         # rendering the game background
         self.gameDisplay.fill(WHITE)
 
-        # render apple
-        self.apple_sprite.draw(self.gameDisplay)
-
         # render player
         self.snake_sprites.draw(self.gameDisplay)
         self.snake_body_sprites.draw(self.gameDisplay)
+
+        # render apple
+        self.apple_sprite.draw(self.gameDisplay)
 
         # draw game grid
         for x in range(0, DISPLAY_WIDTH, TILE_SIZE):
@@ -198,6 +217,7 @@ class Game:
     # GAME LOOP
     def game_loop(self):
         print("Game Running!")
+        pg.mixer.music.play(-1)
 
         self.running = True
         while self.running:
@@ -218,6 +238,9 @@ class Game:
 
     def game_over(self):
         print("Game Over")
+        pg.mixer.music.stop()
+        pg.mixer.Sound.play(self.crash_sound)
+
         is_game_over = True
         menu_box = pg.Rect(0, 0, GAME_OVER_MENU_SIZE, GAME_OVER_MENU_SIZE)
         menu_box.center = (DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2)
@@ -279,6 +302,7 @@ class Game:
         self.apple_sprite = pg.sprite.Group()
 
         self.last_movement_time = 0
+        self.movement_interval = 0
         self.snake = []
 
         self.apples_eaten = 0
