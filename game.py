@@ -45,10 +45,15 @@ class Game:
         self.clock = pg.time.Clock()
         self.running = False
 
+    # initializes all game variables before game starts
     def init_game_vars(self):
         pg.mixer.music.load("sounds/Bonkers-for-Arcades.mp3")
         self.pickup_sound = pg.mixer.Sound("sounds/Pickup.wav")
         self.crash_sound = pg.mixer.Sound("sounds/Crash.wav")
+
+        # create text file that records high score if it does not exist
+        if not os.path.isfile("highscore.txt"):
+            self.record_highscore(0)
 
         self.snake_head = entity.SnakeHead(int(self.display_width/TILE_SIZE/2) * TILE_SIZE, int(self.display_height/TILE_SIZE/2) * TILE_SIZE, GREEN)
         self.snake_sprites.add(self.snake_head)
@@ -118,6 +123,7 @@ class Game:
         for y in range(0, DISPLAY_HEIGHT, TILE_SIZE):
             pg.draw.line(self.gameDisplay, BLACK, (0, y), (DISPLAY_WIDTH, y))
 
+    # handles intro menu
     def game_intro_event_handler(self):
         keys = pg.key.get_pressed()
         in_menu = True
@@ -136,6 +142,7 @@ class Game:
 
         return in_menu
 
+    # handles ingame events
     def game_event_handler(self):
         keys = pg.key.get_pressed()
 
@@ -159,11 +166,16 @@ class Game:
             self.snake_head.dx = 0
             self.snake_head.dy = TILE_SIZE
 
+    # handles game over menu
     def game_over_event_handler(self):
         mouse_pos = pg.mouse.get_pos()
         in_menu = True
         restart_btn_col = BLACK
         quit_btn_col = BLACK
+
+        # record new highscore if player has beaten the previous highscore
+        if self.apples_eaten > self.get_highscore():
+            self.record_highscore(self.apples_eaten)
 
         restart_btn = self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.2)), "RESTART", restart_btn_col, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 50)
         quit_btn = self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.2)), "QUIT", quit_btn_col, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 100)
@@ -188,8 +200,8 @@ class Game:
                 in_menu = False
 
         self.display_text(pg.font.SysFont(TEXT_FONT, TEXT_SIZE), "GAME OVER", BLACK, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 - 100)
-        self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.5)), "APPLES: " + str(self.apples_eaten), RED, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 - 50)
-        self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.5)), "LENGTH: " + str(self.max_length), GREEN, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 - 20)
+        self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.5)), "HIGHSCORE: " + str(self.get_highscore()), BLACK, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 - 50)
+        self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.5)), "APPLES: " + str(self.apples_eaten), RED, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 - 20)
 
         restart_btn = self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.2)), "RESTART", restart_btn_col, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 50)
         quit_btn = self.display_text(pg.font.SysFont(TEXT_FONT, int(TEXT_SIZE / 1.2)), "QUIT", quit_btn_col, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 100)
@@ -257,6 +269,7 @@ class Game:
 
             pg.display.flip()
 
+    # Returns a Pygame Rect object centered at (x,y) with text displayed on top
     def display_text(self, font, text, color, x, y):
         display_text = font.render(text, True, color)
         btn = display_text.get_rect()
@@ -282,6 +295,26 @@ class Game:
         snake_body = entity.SnakeBody(self.snake[-1].last_posx, self.snake[-1].last_posy, GREEN)
         self.snake_body_sprites.add(snake_body)
         self.snake.append(snake_body)
+
+    # writes a highscore to file
+    def record_highscore(self, score):
+        file = open("highscore.txt", "w")
+        file.write(str(score))
+        file.close()
+
+    # returns current highscore
+    def get_highscore(self):
+        highscore = 0
+
+        if os.path.isfile("highscore.txt"):
+            file = open("highscore.txt", "r")
+            line = file.readline()
+
+            if line.isdigit():
+                highscore = int(line)
+            file.close()
+
+        return highscore
 
     def run(self):
         self.init_game_vars()
