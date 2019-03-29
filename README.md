@@ -4,7 +4,7 @@ Simple snake game made using Python and Pygame.
 
 ### Demo
 
-![alt text](demo/snake_demo.gif)
+![](demo/snake_demo.gif =300x300)
 
 ### Credits
 
