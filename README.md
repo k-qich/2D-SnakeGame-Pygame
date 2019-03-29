@@ -2,6 +2,10 @@
 
 Simple snake game made using Python and Pygame.
 
+### Demo
+
+![](demo/snake_demo_resized.gif)
+
 ### Credits
 
 Music by:
